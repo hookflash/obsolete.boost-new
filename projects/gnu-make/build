@@ -84,8 +84,8 @@ build_darwin(){
 	rm -f ~/user-config.jam; validate_before
 	
 	./bootstrap.sh --with-libraries=thread,date_time,regex ; validate_before
-	./bjam clean; validate_before
-	./bjam --prefix=$STAGING_PREFIX architecture=x86 address-model=32 link=static install ; validate_before
+	./b2 clean; validate_before
+	./b2 --prefix=$STAGING_PREFIX architecture=x86 address-model=32 link=static install ; validate_before
 	
 	popd
 }
@@ -101,7 +101,7 @@ build_ios(){
 	xcode_version=`system_profiler SPDeveloperToolsDataType | grep -B 1 Xcode.app | grep -v Xcode.app | grep -v -- -- | awk 'NR==1 {print $2}'`
 	DEVELOPER=`xcode-select -print-path`
 	COMPILER=$DEVELOPER/Platforms/iPhoneOS.platform/Developer/usr/bin/gcc
-	ARCH=armv7
+	ARCH="-arch armv7 -arch armv6"
 	IOS_PREFIX=$STAGING_PREFIX/iPhoneOS
 	
 	TOOLS="tools"
@@ -123,27 +123,27 @@ build_ios(){
 : <architecture>arm <target-os>iphone
 ;
 """ > ~/user-config.jam ; validate_before
-# <compileflags>-arch $ARCH  
+# <compileflags>$ARCH  
 	
 		./bootstrap.sh --with-libraries=thread,date_time,regex ; validate_before
-		./bjam --prefix=$IOS_PREFIX toolset=darwin cflags="-fvisibility=default -fvisibility-inlines-hidden -mthumb -arch $ARCH" architecture=arm target-os=iphone macosx-version=iphone-6.1 link=static threading=multi define=_LITTLE_ENDIAN install
+		./b2 --prefix=$IOS_PREFIX toolset=darwin cflags="-fvisibility=default -fvisibility-inlines-hidden -mthumb $ARCH" architecture=arm target-os=iphone macosx-version=iphone-6.1 link=static threading=multi define=_LITTLE_ENDIAN install
 		rm ~/user-config.jam
 	popd
 	
-	pushd $TOOLS
-		clang -o $CONVERT $CONVERT.c
-		mv $CONVERT $IOS_PREFIX/lib/$CONVERT
-		cp $CONVERT_SCRIPT $IOS_PREFIX/lib/$CONVERT_SCRIPT
-	popd
+#	pushd $TOOLS
+#		clang -o $CONVERT $CONVERT.c
+#		mv $CONVERT $IOS_PREFIX/lib/$CONVERT
+#		cp $CONVERT_SCRIPT $IOS_PREFIX/lib/$CONVERT_SCRIPT
+#	popd
 	
-	pushd $IOS_PREFIX/lib
-		./$CONVERT_SCRIPT libboost_date_time.a
-		./$CONVERT_SCRIPT libboost_regex.a
-		./$CONVERT_SCRIPT libboost_system.a
-		./$CONVERT_SCRIPT libboost_thread.a
-		rm $CONVERT_SCRIPT
-		rm ./$CONVERT
-	popd
+#	pushd $IOS_PREFIX/lib
+#		./$CONVERT_SCRIPT libboost_date_time.a
+#		./$CONVERT_SCRIPT libboost_regex.a
+#		./$CONVERT_SCRIPT libboost_system.a
+#		./$CONVERT_SCRIPT libboost_thread.a
+#		rm $CONVERT_SCRIPT
+#		rm ./$CONVERT
+#	popd
 }
 
 clean_ios(){
@@ -158,7 +158,7 @@ build_linux(){
 	mkdir -p $STAGING_PREFIX; validate_before
 
 	cd $BASEDIR/../../boost
-	./bootstrap.sh --with-libraries=thread,date_time ; validate_before
+	./bootstrap.sh --with-libraries=thread,date_time,regex ; validate_before
 	./b2 clean; validate_before
 	./b2 --prefix=$STAGING_PREFIX cxxflags=-fPIC link=static install; validate_before
 }
